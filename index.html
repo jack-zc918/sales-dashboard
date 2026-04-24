@@ -1,1 +1,343 @@
-<!DOCTYPE html><html lang=zh-CN><head>    <meta charset=UTF-8>    <meta name=viewport content=width=device-width, initial-scale=1.0>    <title>📊 机器人销售 BI 看板 - 2026年4月</title>    <script src=https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js></script>    <style>        * {            margin: 0;            padding: 0;            box-sizing: border-box;        }        body {            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);            color: #fff;            padding: 20px;            min-height: 100vh;        }        .header {            text-align: center;            padding: 20px 0 30px;            border-bottom: 2px solid #ffd700;            margin-bottom: 30px;        }        .header h1 {            font-size: 32px;            color: #ffd700;            margin-bottom: 10px;        }        .header p {            font-size: 14px;            color: #00d9a5;        }        .stats-grid { 
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 机器人销售 BI 看板 - 2026年4月</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0 40px;
+            border-bottom: 3px solid #ffd700;
+            margin-bottom: 40px;
+        }
+        .header h1 { font-size: 36px; color: #ffd700; margin-bottom: 15px; }
+        .header p { font-size: 16px; color: #00d9a5; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+        }
+        .stat-card .value { font-size: 42px; font-weight: bold; color: #ffd700; }
+        .stat-card .label { font-size: 16px; color: #00d9a5; margin-top: 10px; }
+        .stat-card .change { font-size: 14px; color: #00d9a5; margin-top: 8px; }
+        .section-title {
+            font-size: 28px; color: #ffd700;
+            margin: 50px 0 30px;
+            padding-left: 15px;
+            border-left: 5px solid #00d9a5;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 35px;
+            margin-bottom: 50px;
+        }
+        .chart-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255, 215, 0, 0.25);
+        }
+        .chart-box h2 { font-size: 20px; color: #ffd700; margin-bottom: 20px; }
+        .bar-container { display: flex; gap: 10px; align-items: flex-end; height: 200px; }
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(255, 215, 0, 0.7), rgba(255, 215, 0, 0.9));
+            border-radius: 8px 8px 0 0;
+            min-height: 30px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: #1a1a2e;
+            font-weight: bold;
+            padding-bottom: 10px;
+        }
+        .bar-label { text-align: center; margin-top: 10px; color: #fff; font-size: 14px; }
+        .pie-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+        .pie-chart {
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(#ffd700 0deg 327deg, #00d9a5 327deg 351deg, #6495ed 351deg 360deg);
+        }
+        .pie-labels { display: flex; flex-direction: column; gap: 15px; }
+        .pie-label-item { display: flex; gap: 10px; align-items: center; }
+        .pie-color { width: 20px; height: 20px; border-radius: 50%; }
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .table-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255, 215, 0, 0.25);
+        }
+        .table-box h2 { font-size: 18px; color: #ffd700; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+        th { color: #00d9a5; font-size: 14px; }
+        td { font-size: 13px; }
+        tr:hover { background: rgba(255, 215, 0, 0.15); }
+        .rank-badge {
+            display: inline-block;
+            width: 26px; height: 26px;
+            line-height: 26px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        .rank-1 { background: #ffd700; color: #1a1a2e; }
+        .rank-2 { background: #c0c0c0; color: #1a1a2e; }
+        .rank-3 { background: #cd7f32; color: #1a1a2e; }
+        .rank-other { background: rgba(255, 255, 255, 0.25); color: #fff; }
+        .insights-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid rgba(0, 217, 165, 0.4);
+            margin-bottom: 40px;
+        }
+        .insights-box h2 { font-size: 22px; color: #00d9a5; margin-bottom: 20px; }
+        .insights-list { list-style: none; }
+        .insights-list li { padding: 15px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+        .insights-list li:last-child { border-bottom: none; }
+        .insights-list strong { color: #ffd700; }
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #00d9a5;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 800px) {
+            .tables-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 机器人销售 BI 看板</h1>
+        <p>数据周期：2026年1月1日 - 4月20日 | 总数据量：43,792 行订单记录</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="value">48,596</div>
+            <div class="label">累计销量（件）</div>
+            <div class="change">1-4月总销量</div>
+        </div>
+        <div class="stat-card">
+            <div class="value">16,863</div>
+            <div class="label">3月销量峰值</div>
+            <div class="change">+50.1% 🎉</div>
+        </div>
+        <div class="stat-card">
+            <div class="value">14,413</div>
+            <div class="label">4月预测销量</div>
+            <div class="change">回归正常水平</div>
+        </div>
+        <div class="stat-card">
+            <div class="value">90.81%</div>
+            <div class="label">美国市场占比</div>
+            <div class="change">绝对主导市场</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">📈 图表分析</h2>
+
+    <div class="charts-grid">
+        <div class="chart-box">
+            <h2>月度销售趋势</h2>
+            <div class="bar-container">
+                <div class="bar" style="height: 64%; font-size: 14px;">10,850</div>
+                <div class="bar" style="height: 67%; font-size: 14px;">11,232</div>
+                <div class="bar" style="height: 100%; background: linear-gradient(to top, #00d9a5 0%, #00d9a5 100%); font-size: 14px;">16,863</div>
+                <div class="bar" style="height: 85%; background: linear-gradient(to top, #6495ed 0%, #6495ed 100%); font-size: 14px;">14,413</div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div class="bar-label" style="flex: 1;">1月</div>
+                <div class="bar-label" style="flex: 1;">2月</div>
+                <div class="bar-label" style="flex: 1; color: #00d9a5;">3月峰值</div>
+                <div class="bar-label" style="flex: 1; color: #6495ed;">4月预测</div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h2>国家/地区分布</h2>
+            <div class="pie-container">
+                <div class="pie-chart"></div>
+                <div class="pie-labels">
+                    <div class="pie-label-item">
+                        <div class="pie-color" style="background: #ffd700;"></div>
+                        <span>美国 90.81%</span>
+                    </div>
+                    <div class="pie-label-item">
+                        <div class="pie-color" style="background: #00d9a5;"></div>
+                        <span>德国 6.51%</span>
+                    </div>
+                    <div class="pie-label-item">
+                        <div class="pie-color" style="background: #6495ed;"></div>
+                        <span>加拿大 2.69%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h2>平台销售分布</h2>
+            <div class="bar-container" style="flex-direction: column; height: auto; gap: 5px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 80px; color: #fff;">Amazon</span>
+                    <div style="background: #00d9a5; height: 30px; width: 45.72%; border-radius: 6px;"></div>
+                    <span>45.72%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 80px; color: #fff;">DJ</span>
+                    <div style="background: #00d9a5; height: 30px; width: 24.16%; border-radius: 6px;"></div>
+                    <span>24.16%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 80px; color: #fff;">Walmart</span>
+                    <div style="background: #00d9a5; height: 30px; width: 16.56%; border-radius: 6px;"></div>
+                    <span>16.56%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 80px; color: #fff;">Temu</span>
+                    <div style="background: #00d9a5; height: 30px; width: 5.71%; border-radius: 6px;"></div>
+                    <span>5.71%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 80px; color: #fff;">Wayfair</span>
+                    <div style="background: #00d9a5; height: 30px; width: 4.84%; border-radius: 6px;"></div>
+                    <span>4.84%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h2>负责人绩效对比</h2>
+            <div class="bar-container">
+                <div class="bar" style="height: 100%; font-size: 11px;">793</div>
+                <div class="bar" style="height: 91%; font-size: 11px;">721</div>
+                <div class="bar" style="height: 81%; font-size: 11px;">648</div>
+                <div class="bar" style="height: 62%; font-size: 11px;">494</div>
+                <div class="bar" style="height: 61%; font-size: 11px;">482</div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div class="bar-label" style="flex: 1; font-size: 11px;">邵尤超</div>
+                <div class="bar-label" style="flex: 1; font-size: 11px;">艾比克</div>
+                <div class="bar-label" style="flex: 1; font-size: 11px;">李雅琪</div>
+                <div class="bar-label" style="flex: 1; font-size: 11px;">鲁丰齐</div>
+                <div class="bar-label" style="flex: 1; font-size: 11px;">王中华</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">🏆 排名数据</h2>
+
+    <div class="tables-grid">
+        <div class="table-box">
+            <h2>Top 10 热销型号</h2>
+            <table>
+                <thead><tr><th>排名</th><th>型号</th><th>销量</th><th>备货建议</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="rank-badge rank-1">1</span></td><td>C-1162 WH</td><td>157</td><td>275件</td></tr>
+                    <tr><td><span class="rank-badge rank-2">2</span></td><td>B0501A-BR</td><td>148</td><td>260件</td></tr>
+                    <tr><td><span class="rank-badge rank-3">3</span></td><td>C-1162 BK</td><td>139</td><td>244件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">4</span></td><td>F-1280-MWHGRT</td><td>115</td><td>202件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">5</span></td><td>F-1280-MWHGR-L</td><td>113</td><td>198件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">6</span></td><td>C-1162 LG</td><td>102</td><td>179件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">7</span></td><td>C-1162 BKG</td><td>102</td><td>179件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">8</span></td><td>C-1162 WH-AM</td><td>102</td><td>179件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">9</span></td><td>C-1162 DG</td><td>78</td><td>137件</td></tr>
+                    <tr><td><span class="rank-badge rank-other">10</span></td><td>B0501A-BR-6IN1</td><td>73</td><td>128件</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-box">
+            <h2>Top 10 客户/店铺</h2>
+            <table>
+                <thead><tr><th>排名</th><th>客户名称</th><th>销量</th><th>渠道</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="rank-badge rank-1">1</span></td><td>艾比克美国 WF</td><td>579</td><td>Walmart</td></tr>
+                    <tr><td><span class="rank-badge rank-2">2</span></td><td>德融 AMZ</td><td>425</td><td>Amazon</td></tr>
+                    <tr><td><span class="rank-badge rank-3">3</span></td><td>艾比克 AMZ</td><td>366</td><td>Amazon</td></tr>
+                    <tr><td><span class="rank-badge rank-other">4</span></td><td>卡迪诺 AMZ</td><td>354</td><td>Amazon</td></tr>
+                    <tr><td><span class="rank-badge rank-other">5</span></td><td>卡蒂诺 AMZ</td><td>338</td><td>Amazon</td></tr>
+                    <tr><td><span class="rank-badge rank-other">6</span></td><td>途瑞祺 WF</td><td>275</td><td>Walmart</td></tr>
+                    <tr><td><span class="rank-badge rank-other">7</span></td><td>香港鸿殿店 TM</td><td>272</td><td>Temu</td></tr>
+                    <tr><td><span class="rank-badge rank-other">8</span></td><td>香港木汀 AMZ</td><td>260</td><td>Amazon</td></tr>
+                    <tr><td><span class="rank-badge rank-other">9</span></td><td>德泰 WF</td><td>241</td><td>Walmart</td></tr>
+                    <tr><td><span class="rank-badge rank-other">10</span></td><td>东仕赢 AMZ</td><td>227</td><td>Amazon</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-box">
+            <h2>Top 10 负责人绩效</h2>
+            <table>
+                <thead><tr><th>排名</th><th>负责人</th><th>销量</th><th>效率</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="rank-badge rank-1">1</span></td><td>邵尤超</td><td>793</td><td>1.14</td></tr>
+                    <tr><td><span class="rank-badge rank-2">2</span></td><td>艾比克</td><td>721</td><td>1.20</td></tr>
+                    <tr><td><span class="rank-badge rank-3">3</span></td><td>李雅琪</td><td>648</td><td>1.01</td></tr>
+                    <tr><td><span class="rank-badge rank-other">4</span></td><td>鲁丰齐</td><td>494</td><td>1.02</td></tr>
+                    <tr><td><span class="rank-badge rank-other">5</span></td><td>王中华</td><td>482</td><td>1.16</td></tr>
+                    <tr><td><span class="rank-badge rank-other">6</span></td><td>杨娇娇</td><td>475</td><td>1.03</td></tr>
+                    <tr><td><span class="rank-badge rank-other">7</span></td><td>李浩</td><td>407</td><td>1.51 ⭐</td></tr>
+                    <tr><td><span class="rank-badge rank-other">8</span></td><td>高宇航</td><td>384</td><td>1.05</td></tr>
+                    <tr><td><span class="rank-badge rank-other">9</span></td><td>马婷</td><td>381</td><td>1.04</td></tr>
+                    <tr><td><span class="rank-badge rank-other">10</span></td><td>许雪诺</td><td>338</td><td>1.01</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="insights-box">
+        <h2>💡 关键洞察与备货建议</h2>
+        <ul class="insights-list">
+            <li><strong>3月大促效应明显：</strong>销量环比激增50%，达到16,863件峰值</li>
+            <li><strong>4月趋势平稳：</strong>按1-20日数据推算，全月预计14,413件</li>
+            <li><strong>美国市场绝对主导：</strong>占比90.81%，德国(6.51%)和加拿大(2.69%)为次要市场</li>
+            <li><strong>平台分布：</strong>Amazon(45.7%)为第一大平台</li>
+            <li><strong>重点备货型号：</strong>C-1162系列、B0501A系列、F-1280系列</li>
+            <li><strong>4月总备货建议：</strong>14,500件（预留5%安全库存）</li>
+            <li><strong>李浩效率最高：</strong>效率值1.51 ⭐</li>
+        </ul>
+    </div>
+
+    <footer>
+        报告生成时间：2026年4月24日 | 灵墨 🐱‍💻 BI看板（纯CSS版）
+    </footer>
+</body>
+</html>
